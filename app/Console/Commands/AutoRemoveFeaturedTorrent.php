@@ -69,11 +69,12 @@ class AutoRemoveFeaturedTorrent extends Command
             $appurl = config('app.url');
 
             $this->chat->systemMessage(
-                "Ladies and Gents, [url={$appurl}/torrents/{$torrent->id}]{$torrent->name}[/url] is no longer featured. :poop:"
+                sprintf('Ladies and Gents, [url=%s/torrents/%s]%s[/url] is no longer featured. :poop:', $appurl, $torrent->id, $torrent->name)
             );
 
             // Delete The Record From DB
             $featured_torrent->delete();
         }
+        $this->comment('Automated Removal Featured Torrents Command Complete');
     }
 }

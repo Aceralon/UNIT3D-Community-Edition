@@ -123,7 +123,7 @@ class AnnounceController extends Controller
         }
 
         // Check Passkey Against Cache or Users Table
-        $user = Cache::get("user.{$passkey}") ?? User::where('passkey', '=', $passkey)->first();
+        $user = Cache::get(sprintf('user.%s', $passkey)) ?? User::where('passkey', '=', $passkey)->first();
 
         // If Passkey Doesn't Exist Return Error to Client
         if ($user === null) {
@@ -206,7 +206,7 @@ class AnnounceController extends Controller
         }
 
         // Check Info Hash Against Cache or Torrents Table
-        $torrent = Cache::get("torrent.{$info_hash}") ?? Torrent::select(['id', 'status', 'free', 'doubleup', 'times_completed', 'seeders', 'leechers'])->withAnyStatus()->where('info_hash', '=', $info_hash)->first();
+        $torrent = Cache::get(sprintf('torrent.%s', $info_hash)) ?? Torrent::select(['id', 'status', 'free', 'doubleup', 'times_completed', 'seeders', 'leechers'])->withAnyStatus()->where('info_hash', '=', $info_hash)->first();
 
         // If Torrent Doesnt Exsist Return Error to Client
         if ($torrent === null) {
@@ -236,9 +236,7 @@ class AnnounceController extends Controller
         $peers = Peer::where('torrent_id', '=', $torrent->id)->take(50)->get()->toArray();
 
         // Pull Count On Users Peers Per Torrent For Rate Limiting
-        $connections = Cache::remember("user_connections.{$torrent->id}", 1800, function () use ($torrent, $user) {
-            return Peer::where('torrent_id', '=', $torrent->id)->where('user_id', '=', $user->id)->count();
-        });
+        $connections = Peer::where('torrent_id', '=', $torrent->id)->where('user_id', '=', $user->id)->count();
 
         // If Users Peer Count On A Single Torrent Is Greater Than X Return Error to Client
         if ($connections > config('announce.rate_limit')) {
